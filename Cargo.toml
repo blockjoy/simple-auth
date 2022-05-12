@@ -1,0 +1,14 @@
+[package]
+authors = ["Chris Bruce <chris@blockjoy.com>"]
+categories = ["authentication", "web-programming"]
+description = "A storage and webserver agnostic simple authentication crate for your Rust web/api projects."
+edition = "2021"
+keywords = ["auth", "authentication", "api", "web", "rest"]
+license = "Apache-2.0"
+license-file = "LICENSE"
+name = "simple-auth"
+publish = true
+repository = "https://github.com/blockjoy/simple-auth/"
+version = "0.1.0"
+
+[dependencies]
