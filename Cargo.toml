@@ -12,3 +12,26 @@ repository = "https://github.com/blockjoy/simple-auth/"
 version = "0.1.0"
 
 [dependencies]
+anyhow = "1.0.56"
+axum = { version = "0.5.1", features = ["headers"] }
+sqlx = { version = "0.5.13", features = [
+    "postgres",
+    "runtime-tokio-rustls",
+    "migrate",
+    "chrono",
+    "uuid",
+] }
+chrono = { version = "0.4.19", features = ["serde"] }
+thiserror = "1.0.30"
+log = "0.4.14"
+serde = "1.0.136"
+serde_json = "1.0.79"
+uuid = { version = "0.8.2", features = ["v4", "serde"] }
+jsonwebtoken = "7.2.0"
+validator = { version = "0.13.0", features = ["derive"] }
+argon2 = "0.4.0"
+sendgrid = { version = "0.17.4", default-features = false, features = [
+    "rustls",
+    "async",
+] }
+dotenv = "0.15.0"
