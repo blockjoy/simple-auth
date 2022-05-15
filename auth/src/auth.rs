@@ -1,5 +1,5 @@
 use crate::errors::AppError;
-use crate::models::{User, UserRole};
+use crate::user::{User, UserRole};
 use crate::result::Result;
 use anyhow::anyhow;
 use axum::{
