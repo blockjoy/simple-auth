@@ -1,6 +1,6 @@
-use crate::auth;
+use crate::request;
 use crate::errors::AppError;
-use crate::result::Result;
+use crate::response::Result;
 use anyhow::anyhow;
 use argon2::{
     password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
@@ -304,12 +304,12 @@ impl User {
     pub async fn email_reset_password(req: PasswordResetRequest, db_pool: &PgPool) -> Result<()> {
         let user = User::find_by_email(&req.email, db_pool).await?;
 
-        let auth_data = auth::UserAuthData {
+        let auth_data = request::UserAuthData {
             user_id: user.id,
             user_role: user.first_name.to_string(),
         };
 
-        let token = auth::create_temp_jwt(&auth_data)?;
+        let token = request::create_temp_jwt(&auth_data)?;
 
         let p = Personalization::new(Email::new(&user.email));
 
@@ -343,8 +343,8 @@ impl User {
             .validate()
             .map_err(|e| AppError::ValidationError(e.to_string()))?;
 
-        match auth::validate_jwt(&req.token)? {
-            auth::JwtValidationStatus::Valid(auth_data) => {
+        match request::validate_jwt(&req.token)? {
+            request::JwtValidationStatus::Valid(auth_data) => {
                 let user = User::find_by_id(auth_data.user_id, db_pool).await?;
                 return User::update_password(user, &req.password, db_pool).await;
             }
@@ -401,11 +401,11 @@ impl User {
     }
 
     pub fn set_jwt(&mut self) -> Result<Self> {
-        let auth_data = auth::UserAuthData {
+        let auth_data = request::UserAuthData {
             user_id: self.id,
             user_role: self.first_name.to_string(),
         };
-        self.token = Some(auth::create_jwt(&auth_data)?);
+        self.token = Some(request::create_jwt(&auth_data)?);
         Ok(self.to_owned())
     }
 }

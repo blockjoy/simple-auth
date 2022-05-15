@@ -1,6 +1,6 @@
 use crate::errors::AppError;
 use crate::user::{User, UserRole};
-use crate::result::Result;
+use crate::response::Result;
 use anyhow::anyhow;
 use axum::{
     async_trait,
