@@ -1,11 +1,9 @@
-use crate::errors::AppError;
-use crate::response::Result;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 // Todo : make it independent of DBMS 
 use sqlx::postgres::PgRow;
 use sqlx::{FromRow, Row};
-use std::{fmt, str::FromStr};
+use std::fmt;
 use uuid::Uuid;
 use validator::Validate;
 
@@ -28,14 +26,7 @@ pub struct User {
     pub updated_at: DateTime<Utc>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, sqlx::Type)]
-#[serde(rename_all = "snake_case")]
-#[sqlx(type_name = "enum_user_role", rename_all = "snake_case")]
-pub enum UserRole {
-    User,
-    Host,
-    Admin,
-}
+
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, sqlx::Type)]
 #[serde(rename_all = "snake_case")]
@@ -112,27 +103,9 @@ impl fmt::Display for UserOrgRole {
     }
 }
 
-impl fmt::Display for UserRole {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Admin => write!(f, "admin"),
-            Self::Host => write!(f, "host"),
-            Self::User => write!(f, "user"),
-        }
-    }
-}
 
-impl FromStr for UserRole {
-    type Err = AppError;
 
-    fn from_str(s: &str) -> Result<Self> {
-        match s {
-            "admin" => Ok(Self::Admin),
-            "host" => Ok(Self::Host),
-            _ => Ok(Self::User),
-        }
-    }
-}
+
 
 impl From<PgRow> for User {
     fn from(row: PgRow) -> Self {

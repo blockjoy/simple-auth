@@ -1,6 +1,6 @@
 use crate::errors::AppError;
 use crate::response::Result;
-use crate::user::types::{User, UserRole};
+use std::{fmt, str::FromStr};
 use anyhow::anyhow;
 use axum::{
     async_trait,
@@ -10,10 +10,8 @@ use chrono::Utc;
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use log::{debug, warn};
 use serde::{Deserialize, Serialize};
-use sqlx::PgPool;
 use std::borrow::Cow;
 use std::env;
-use std::str::FromStr;
 use uuid::Uuid;
 
 const JWT_SECRET: &str = "?G'A$jNW<$6x(PdFP?4VdRvmotIV^^";
@@ -112,6 +110,37 @@ fn get_current_timestamp() -> i64 {
     Utc::now().timestamp()
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, sqlx::Type)]
+#[serde(rename_all = "snake_case")]
+#[sqlx(type_name = "enum_user_role", rename_all = "snake_case")]
+pub enum UserRole {
+    User,
+    Host,
+    Admin,
+}
+
+impl fmt::Display for UserRole {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Admin => write!(f, "admin"),
+            Self::Host => write!(f, "host"),
+            Self::User => write!(f, "user"),
+        }
+    }
+}
+impl FromStr for UserRole {
+    type Err = AppError;
+
+    fn from_str(s: &str) -> Result<Self> {
+        match s {
+            "admin" => Ok(Self::Admin),
+            "host" => Ok(Self::Host),
+            _ => Ok(Self::User),
+        }
+    }
+}
+
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Copy)]
 pub struct UserAuthInfo {
     pub id: Uuid,
@@ -159,20 +188,20 @@ impl Authentication {
         }
     }
 
-    /// Returns an error if user doesn't have access
-    pub fn try_user_access(&self, user_id: Uuid) -> Result<bool> {
-        match self {
-            Self::User(u) if u.id == user_id => Ok(true),
-            _ => Err(AppError::InsufficientPermissionsError),
-        }
-    }
+    ///// Returns an error if user doesn't have access
+    // pub fn try_user_access(&self, user_id: Uuid) -> Result<bool> {
+    //     match self {
+    //         Self::User(u) if u.id == user_id => Ok(true),
+    //         _ => Err(AppError::InsufficientPermissionsError),
+    //     }
+    // }
 
-    pub async fn get_user(&self, pool: PgPool) -> Result<User> {
-        match self {
-            Self::User(u) => User::find_by_id(u.id, &pool).await,
-            _ => Err(AppError::InsufficientPermissionsError),
-        }
-    }
+    // pub async fn get_user(&self, pool: PgPool) -> Result<User> {
+    //     match self {
+    //         Self::User(u) => User::find_by_id(u.id, &pool).await,
+    //         _ => Err(AppError::InsufficientPermissionsError),
+    //     }
+    // }
 }
 
 #[async_trait]
