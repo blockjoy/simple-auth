@@ -1,13 +1,13 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-// Todo : make it independent of DBMS 
+// Todo : make it independent of DBMS
 use sqlx::postgres::PgRow;
 use sqlx::{FromRow, Row};
 use std::fmt;
 use uuid::Uuid;
 use validator::Validate;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct User {
     pub id: Uuid,
     pub first_name: String,
@@ -25,8 +25,6 @@ pub struct User {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
-
-
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, sqlx::Type)]
 #[serde(rename_all = "snake_case")]
@@ -102,10 +100,6 @@ impl fmt::Display for UserOrgRole {
         }
     }
 }
-
-
-
-
 
 impl From<PgRow> for User {
     fn from(row: PgRow) -> Self {

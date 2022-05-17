@@ -1,6 +1,5 @@
 use crate::errors::AppError;
 use crate::response::Result;
-use std::{fmt, str::FromStr};
 use anyhow::anyhow;
 use axum::{
     async_trait,
@@ -12,6 +11,7 @@ use log::{debug, warn};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::env;
+use std::{fmt, str::FromStr};
 use uuid::Uuid;
 
 const JWT_SECRET: &str = "?G'A$jNW<$6x(PdFP?4VdRvmotIV^^";
@@ -139,7 +139,6 @@ impl FromStr for UserRole {
         }
     }
 }
-
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Copy)]
 pub struct UserAuthInfo {
