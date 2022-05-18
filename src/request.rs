@@ -1,4 +1,4 @@
-use crate::errors::AppError;
+use crate::errors::Error;
 use crate::response::Result;
 use anyhow::anyhow;
 use axum::{
@@ -80,7 +80,7 @@ pub fn validate_jwt(jwt: &str) -> Result<JwtValidationStatus> {
     ) {
         Ok(decoded) => {
             let user_id = Uuid::parse_str(&decoded.claims.sub)
-                .map_err(|_| AppError::from(anyhow!("Error parsing uuid from JWT sub")))?;
+                .map_err(|_| Error::from(anyhow!("Error parsing uuid from JWT sub")))?;
             let user_role = decoded.claims.role;
 
             let auth_data = UserAuthData { user_id, user_role };
@@ -143,7 +143,7 @@ impl Authentication {
         if self.is_admin() {
             Ok(true)
         } else {
-            Err(AppError::InsufficientPermissionsError)
+            Err(Error::InsufficientPermissionsError)
         }
     }
 
@@ -152,7 +152,7 @@ impl Authentication {
         if self.is_service() {
             Ok(true)
         } else {
-            Err(AppError::InsufficientPermissionsError)
+            Err(Error::InsufficientPermissionsError)
         }
     }
 
@@ -160,14 +160,14 @@ impl Authentication {
     // pub fn try_user_access(&self, user_id: Uuid) -> Result<bool> {
     //     match self {
     //         Self::User(u) if u.id == user_id => Ok(true),
-    //         _ => Err(AppError::InsufficientPermissionsError),
+    //         _ => Err(Error::InsufficientPermissionsError),
     //     }
     // }
 
     // pub async fn get_user(&self, pool: PgPool) -> Result<User> {
     //     match self {
     //         Self::User(u) => User::find_by_id(u.id, &pool).await,
-    //         _ => Err(AppError::InsufficientPermissionsError),
+    //         _ => Err(Error::InsufficientPermissionsError),
     //     }
     // }
 }
@@ -177,7 +177,7 @@ impl<B> FromRequest<B> for Authentication
 where
     B: Send,
 {
-    type Rejection = AppError;
+    type Rejection = Error;
 
     async fn from_request(req: &mut RequestParts<B>) -> std::result::Result<Self, Self::Rejection> {
         if let Some(token) = req

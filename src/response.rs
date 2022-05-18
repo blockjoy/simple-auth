@@ -1,3 +1,3 @@
-use crate::errors::AppError;
+use crate::errors::Error;
 
-pub type Result<T> = std::result::Result<T, AppError>;
+pub type Result<T> = std::result::Result<T, Error>;

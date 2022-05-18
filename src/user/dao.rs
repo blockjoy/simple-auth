@@ -2,7 +2,7 @@ use super::types::{
     Org, PasswordResetRequest, PwdResetInfo, RegistrationReq, User, UserLoginRequest, UserOrgRole,
     UserRefreshRequest, UserSummary,
 };
-use crate::errors::AppError;
+use crate::errors::Error;
 use crate::request;
 use crate::response::Result;
 use anyhow::anyhow;
@@ -19,7 +19,7 @@ impl User {
     pub async fn create_user(req: RegistrationReq, db_pool: &PgPool) -> Result<Self> {
         let _ = req
             .validate()
-            .map_err(|e| AppError::ValidationError(e.to_string()));
+            .map_err(|e| Error::ValidationError(e.to_string()));
 
         let argon2 = Argon2::default();
         let salt = SaltString::generate(&mut OsRng);
@@ -48,7 +48,7 @@ impl User {
             .fetch_one(&mut tx)
             .await
             .map(Self::from)
-            .map_err(AppError::from);
+            .map_err(Error::from);
 
             let mut user = result.unwrap();
             let organization = req.organization.unwrap();
@@ -61,7 +61,7 @@ impl User {
             tx.commit().await?;
             Ok(user)
         } else {
-            Err(AppError::ValidationError("Invalid password.".to_string()))
+            Err(Error::ValidationError("Invalid password.".to_string()))
         }
     }
 
@@ -70,7 +70,7 @@ impl User {
             .await?
             .set_jwt()
             .map_err(|_e| {
-                AppError::InvalidAuthentication(anyhow!("Email or password is invalid."))
+                Error::InvalidAuthentication(anyhow!("Email or password is invalid."))
             })?;
         let _ = user.verify_password(&user_login_req.password)?;
         Ok(user)
@@ -89,7 +89,7 @@ impl User {
         .fetch_one(&mut tx)
         .await
         .map(Self::from)
-        .map_err(AppError::from);
+        .map_err(Error::from);
         let mut user = user.unwrap();
         user.orgs = Some(Org::find_all_by_user(user.id, &mut tx).await?);
         tx.commit().await?;
@@ -121,7 +121,7 @@ impl User {
             .fetch_one(pool)
             .await
             .map(Self::from)
-            .map_err(AppError::from);
+            .map_err(Error::from);
         Ok(user.unwrap())
     }
 
@@ -129,7 +129,7 @@ impl User {
         let user = User::find_by_refresh(&req.refresh, pool)
             .await?
             .set_jwt()
-            .map_err(AppError::from)?;
+            .map_err(Error::from)?;
         Ok(user)
     }
     pub async fn find_by_refresh(refresh: &str, pool: &PgPool) -> Result<User> {
@@ -138,7 +138,7 @@ impl User {
             .fetch_one(pool)
             .await
             .map(Self::from)
-            .map_err(AppError::from);
+            .map_err(Error::from);
         Ok(user.unwrap())
     }
 
@@ -163,7 +163,7 @@ impl User {
             https://console.blockjoy.com/reset?t={token}</a>.</p><br /><br /><p>Thank You!</p>"##
         );
         let sendgrid_api_key = dotenv::var("SENDGRID_API_KEY").map_err(|_| {
-            AppError::UnexpectedError(anyhow!("Could not find SENDGRID_API_KEY in env."))
+            Error::UnexpectedError(anyhow!("Could not find SENDGRID_API_KEY in env."))
         })?;
         let sender = Sender::new(sendgrid_api_key);
         let m = Message::new(Email::new("BlockJoy <hello@blockjoy.com>"))
@@ -174,7 +174,7 @@ impl User {
         sender
             .send(&m)
             .await
-            .map_err(|_| AppError::UnexpectedError(anyhow!("Could not send email")))?;
+            .map_err(|_| Error::UnexpectedError(anyhow!("Could not send email")))?;
 
         Ok(())
     }
@@ -182,14 +182,14 @@ impl User {
     pub async fn reset_password(req: &PwdResetInfo, db_pool: &PgPool) -> Result<User> {
         let _ = req
             .validate()
-            .map_err(|e| AppError::ValidationError(e.to_string()))?;
+            .map_err(|e| Error::ValidationError(e.to_string()))?;
 
         match request::validate_jwt(&req.token)? {
             request::JwtValidationStatus::Valid(auth_data) => {
                 let user = User::find_by_id(auth_data.user_id, db_pool).await?;
                 return User::update_password(user, &req.password, db_pool).await;
             }
-            _ => Err(AppError::InsufficientPermissionsError),
+            _ => Err(Error::InsufficientPermissionsError),
         }
     }
 
@@ -218,12 +218,12 @@ impl User {
             .map(Self::from)
             .fetch_one(pool)
             .await
-            .map_err(AppError::from)
+            .map_err(Error::from)
             .unwrap()
             .set_jwt();
         }
 
-        Err(AppError::ValidationError("Invalid password.".to_string()))
+        Err(Error::ValidationError("Invalid password.".to_string()))
     }
     pub fn verify_password(&self, password: &str) -> Result<()> {
         let argon2 = Argon2::default();
@@ -236,7 +236,7 @@ impl User {
                 return Ok(());
             }
         }
-        Err(AppError::InvalidAuthentication(anyhow!(
+        Err(Error::InvalidAuthentication(anyhow!(
             "Invalid email or password."
         )))
     }
@@ -259,7 +259,7 @@ impl Org {
             .bind(name)
             .fetch_one(tx)
             .await
-            .map_err(AppError::from)
+            .map_err(Error::from)
     }
 
     pub async fn find_all_by_user(user_id: Uuid, tx: &mut PgConnection) -> Result<Vec<Self>> {
@@ -269,7 +269,7 @@ impl Org {
             .bind(user_id)
             .fetch_all(tx)
             .await
-            .map_err(AppError::from)
+            .map_err(Error::from)
     }
 
     pub async fn create_orgs_users_owner(
@@ -292,7 +292,7 @@ impl Org {
         .bind(UserOrgRole::Owner)
         .execute(tx)
         .await
-        .map_err(AppError::from);
+        .map_err(Error::from);
 
         Ok(())
     }
