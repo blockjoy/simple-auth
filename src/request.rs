@@ -11,7 +11,6 @@ use log::{debug, warn};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::env;
-use std::{fmt, str::FromStr};
 use uuid::Uuid;
 
 const JWT_SECRET: &str = "?G'A$jNW<$6x(PdFP?4VdRvmotIV^^";
@@ -110,40 +109,10 @@ fn get_current_timestamp() -> i64 {
     Utc::now().timestamp()
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, sqlx::Type)]
-#[serde(rename_all = "snake_case")]
-#[sqlx(type_name = "enum_user_role", rename_all = "snake_case")]
-pub enum UserRole {
-    User,
-    Host,
-    Admin,
-}
-
-impl fmt::Display for UserRole {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Admin => write!(f, "admin"),
-            Self::Host => write!(f, "host"),
-            Self::User => write!(f, "user"),
-        }
-    }
-}
-impl FromStr for UserRole {
-    type Err = AppError;
-
-    fn from_str(s: &str) -> Result<Self> {
-        match s {
-            "admin" => Ok(Self::Admin),
-            "host" => Ok(Self::Host),
-            _ => Ok(Self::User),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Copy)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct UserAuthInfo {
     pub id: Uuid,
-    pub role: UserRole,
+    pub role: String,
 }
 
 pub type UserAuthToken = String;
@@ -161,7 +130,7 @@ impl Authentication {
         matches!(self, Self::User(_))
     }
     pub fn is_admin(&self) -> bool {
-        matches!(self, Self::User(u) if u.role == UserRole::Admin)
+        matches!(self, Self::User(u) if u.role == "admin")
     }
 
     #[must_use]
@@ -227,12 +196,10 @@ where
             if token.starts_with("eyJ") {
                 debug!("JWT Auth in Bearer.");
                 if let Ok(JwtValidationStatus::Valid(auth_data)) = validate_jwt(token.as_ref()) {
-                    if let Ok(role) = UserRole::from_str(&auth_data.user_role) {
-                        return Ok(Self::User(UserAuthInfo {
-                            id: auth_data.user_id,
-                            role,
-                        }));
-                    }
+                    return Ok(Self::User(UserAuthInfo {
+                        id: auth_data.user_id,
+                        role: auth_data.user_role,
+                    }));
                 }
             } else if is_service_token {
                 debug!("Service Auth in Bearer.");
