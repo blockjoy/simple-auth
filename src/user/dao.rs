@@ -69,9 +69,7 @@ impl User {
         let user = User::find_by_email(&user_login_req.email, db_pool)
             .await?
             .set_jwt()
-            .map_err(|_e| {
-                Error::InvalidAuthentication(anyhow!("Email or password is invalid."))
-            })?;
+            .map_err(|_e| Error::InvalidAuthentication(anyhow!("Email or password is invalid.")))?;
         let _ = user.verify_password(&user_login_req.password)?;
         Ok(user)
     }
@@ -203,7 +201,7 @@ impl User {
         {
             return sqlx::query(
                 r#"
-                UPDATE
+                UPDATE 
                 users
                 SET
                 hashword = $1,

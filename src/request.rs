@@ -1,3 +1,5 @@
+#![warn(missing_docs, rustdoc::missing_doc_code_examples, unreachable_pub)]
+
 use crate::errors::Error;
 use crate::response::Result;
 use anyhow::anyhow;

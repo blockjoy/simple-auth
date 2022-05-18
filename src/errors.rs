@@ -40,9 +40,7 @@ impl IntoResponse for Error {
             Error::ValidationError(s) => (StatusCode::BAD_REQUEST, s),
             Error::NotFoundError => (StatusCode::NOT_FOUND, self.to_string()),
             Error::DuplicateResource => (StatusCode::CONFLICT, self.to_string()),
-            Error::InvalidAuthentication(_e) => {
-                (StatusCode::UNAUTHORIZED, "Unauthorized".into())
-            }
+            Error::InvalidAuthentication(_e) => (StatusCode::UNAUTHORIZED, "Unauthorized".into()),
             Error::InsufficientPermissionsError => (StatusCode::FORBIDDEN, self.to_string()),
             Error::JWTError(e) => (StatusCode::BAD_REQUEST, e.to_string()),
             Error::UnexpectedError(_e) => (
