@@ -1,17 +1,12 @@
-#![warn(missing_docs, rustdoc::missing_doc_code_examples, unreachable_pub)]
+// #![warn(missing_docs, rustdoc::missing_doc_code_examples, unreachable_pub)]
 
 use crate::errors::Error;
 use crate::response::Result;
 use anyhow::anyhow;
-use axum::{
-    async_trait,
-    extract::{FromRequest, RequestParts},
-};
+
 use chrono::Utc;
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
-use log::{debug, warn};
 use serde::{Deserialize, Serialize};
-use std::borrow::Cow;
 use std::env;
 use uuid::Uuid;
 
@@ -173,7 +168,7 @@ impl Authentication {
     //     }
     // }
 }
-
+/*
 #[async_trait]
 impl<B> FromRequest<B> for Authentication
 where
@@ -217,3 +212,4 @@ where
         Ok(Self::Fail("invalid authentication credentials".to_string()))
     }
 }
+ */

@@ -13,7 +13,6 @@ version = "0.1.0"
 
 [dependencies]
 anyhow = "1.0.56"
-axum = { version = "0.5.1", features = ["headers"] }
 sqlx = { version = "0.5.13", features = [
     "postgres",
     "runtime-tokio-rustls",
